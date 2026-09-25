@@ -1,0 +1,60 @@
+name: Build Unsigned IPA
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode Project
+        run: xcodegen generate
+
+      - name: Build App (unsigned)
+        run: |
+          xcodebuild \
+            -project TestApp.xcodeproj \
+            -scheme TestApp \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Package IPA
+        run: |
+          mkdir -p Payload
+          cp -R "build/Build/Products/Release-iphoneos/TestApp.app" Payload/
+          zip -qry TestApp.ipa Payload
+          echo "=== IPA 信息 ==="
+          ls -lh TestApp.ipa
+          file TestApp.ipa
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TestApp-ipa
+          path: TestApp.ipa
+          if-no-files-found: error
+
+      - name: Publish Release with IPA
+        run: |
+          TAG="v1.0.0-${{ github.run_number }}"
+          gh release create "$TAG" TestApp.ipa \
+            --title "TestApp $TAG" \
+            --notes "未签名 IPA（Unsigned build），由 GitHub Actions 自动构建。安装前请使用你自己的证书重新签名。"
+        env:
+          GH_TOKEN: ${{ github.token }}
