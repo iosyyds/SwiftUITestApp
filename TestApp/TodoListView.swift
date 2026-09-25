@@ -24,11 +24,17 @@ struct TodoListView: View {
         NavigationStack {
             Group {
                 if items.isEmpty {
-                    ContentUnavailableView(
-                        "暂无待办",
-                        systemImage: "checklist",
-                        description: Text("在下方输入框添加第一条待办吧")
-                    )
+                    VStack(spacing: 12) {
+                        Image(systemName: "checklist")
+                            .font(.system(size: 48))
+                            .foregroundStyle(.secondary)
+                        Text("暂无待办")
+                            .font(.headline)
+                        Text("在下方输入框添加第一条待办吧")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     List {
                         ForEach($items) { $item in

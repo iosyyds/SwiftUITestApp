@@ -10,7 +10,7 @@ struct CounterView: View {
                 Text("\(count)")
                     .font(.system(size: 96, weight: .bold, design: .rounded))
                     .contentTransition(.numericText())
-                    .animation(.snappy, value: count)
+                    .animation(.easeInOut(duration: 0.2), value: count)
 
                 HStack(spacing: 32) {
                     Button {
